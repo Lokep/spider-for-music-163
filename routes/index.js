@@ -4,7 +4,7 @@ const request = require('superagent')
 const fs = require('fs')
 
 router.get('/', function(req, res, next) {
-  res.render('index', { title: '各位同学，加油！' });
+  res.send('各位同学，加油！');
 });
 
 router.get('/get-music-playlist', (req, res, next) => {
@@ -15,7 +15,7 @@ router.get('/get-music-playlist', (req, res, next) => {
     .then(response => {
       let { Code, Body } = JSON.parse(response.req.res.text)
       if(Code == 'OK') {
-        if(Body.length > 0) {
+        if(!!Body && Body.length > 0) {
           clearDocs().then(() => {
             fs.writeFile('./public/index.md', JSON.stringify(Body), err => {
               if(err) {
@@ -32,19 +32,13 @@ router.get('/get-music-playlist', (req, res, next) => {
               }
             })
           },() => {
-            res.send({
-              success:false,
-              data:[],
-              message:'id可能有误'
-            })
+            handleErr(res)
           })
+        }else {
+          handleErr(res)
         }
       }else {
-        res.send({
-          success:false,
-          data:[],
-          message:'id可能有误'
-        })
+        handleErr(res)
       }
     })
 })
@@ -60,6 +54,14 @@ function clearDocs() {
     })
   })
   
+}
+
+function handleErr(res) {
+  res.send({
+    success:false,
+    data:[],
+    message:'id可能有误'
+  })
 }
 
 module.exports = router;
